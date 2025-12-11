@@ -1,71 +1,145 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>DND App Demo</title>
-    <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <title>LoreForge — DM Session Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Firebase (compat for simple copy/paste) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 </head>
 <body>
-
-<div id="auth-section">
-    <h2>Login</h2>
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <button onclick="signup()">Sign Up</button>
-</div>
-
-<div id="app" style="display:none">
-    <h1>D&D App Demo</h1>
-    <p id="role-display"></p>
-
-    <!-- Coming soon AI -->
-    <div id="ai-box">
-        <h3>AI Tools (Coming Soon)</h3>
-        <p>This app will support in-browser local AI later.</p>
+  <header class="topbar">
+    <div class="brand">LoreForge <small>— DM Session Demo</small></div>
+    <div class="top-controls">
+      <span id="user-display">Not signed in</span>
+      <button id="btn-signin">Sign In (Google)</button>
+      <button id="btn-signout" style="display:none">Sign Out</button>
     </div>
+  </header>
 
-    <!-- Map Upload -->
-    <div id="map-controls">
-        <h3>Map Upload</h3>
-        <input type="file" id="mapUpload" accept="image/*" />
-    </div>
+  <main class="layout">
+    <aside class="leftcol card">
+      <section>
+        <h3>Session</h3>
+        <div>
+          <input id="session-id-input" placeholder="session-id or create new" />
+          <button id="btn-create-session">Create Session</button>
+          <button id="btn-join-session">Join Session</button>
+        </div>
+        <div id="session-info" class="muted"></div>
+      </section>
 
-    <!-- DM Tools -->
-    <div id="dm-tools">
-        <h3>DM Tools</h3>
-        <button onclick="addToken()">Add Token</button>
-        <button onclick="removeSelectedToken()">Remove Token</button>
-        <button onclick="editSelectedToken()">Edit Token</button>
-    </div>
+      <section id="dm-tools" class="card" style="display:none">
+        <h4>DM Tools</h4>
+        <label>Upload Map (PNG/JPG)</label>
+        <input id="map-upload" type="file" accept="image/*" />
+        <div style="margin-top:6px">
+          <button id="btn-save-map">Save map to session</button>
+          <label><input id="grid-snap" type="checkbox" /> Grid snap</label>
+          <label><input id="show-fog" type="checkbox" checked /> Fog enabled</label>
+          <label><input id="fog-visible" type="checkbox" /> Show Fog (client)</label>
+        </div>
+        <hr/>
+        <h5>Encounters</h5>
+        <input id="enc-name" placeholder="Encounter name" />
+        <input id="enc-list" placeholder="mon1, mon2, ..." />
+        <button id="btn-spawn-enc">Spawn</button>
+      </section>
 
-    <!-- Dice Panel -->
-    <div id="dice-panel">
-        <h3>Dice Roller</h3>
-        <button onclick="rollDice(4)">d4</button>
-        <button onclick="rollDice(6)">d6</button>
-        <button onclick="rollDice(8)">d8</button>
-        <button onclick="rollDice(10)">d10</button>
-        <button onclick="rollDice(12)">d12</button>
-        <button onclick="rollDice(20)">d20</button>
-        <button onclick="rollDice(100)">d100</button>
-        <button onclick="rollAdv()">Adv</button>
-        <button onclick="rollDis()">Dis</button>
-        <div id="roll-output"></div>
-    </div>
+      <section class="card">
+        <h4>Players & Roles</h4>
+        <div id="players-list" class="list"></div>
+        <small class="muted">Assign roles in DB: user role = 'dm' or 'player' or 'viewer'</small>
+      </section>
 
-    <!-- Map Area -->
-    <div id="map-container">
-        <img id="battlemap" src="" />
-    </div>
+      <section class="card">
+        <h4>Dice</h4>
+        <div class="dice-grid">
+          <button class="dice" data-sides="4">d4</button>
+          <button class="dice" data-sides="6">d6</button>
+          <button class="dice" data-sides="8">d8</button>
+          <button class="dice" data-sides="10">d10</button>
+          <button class="dice" data-sides="12">d12</button>
+          <button class="dice" data-sides="20">d20</button>
+          <button class="dice" data-sides="100">d100</button>
+          <button id="adv-btn">Adv</button>
+          <button id="dis-btn">Dis</button>
+        </div>
+        <div id="dice-log" class="small muted"></div>
+      </section>
 
-</div>
+      <section class="card">
+        <h4>Turn Tracker</h4>
+        <input id="ini-name" placeholder="Name" />
+        <input id="ini-val" placeholder="Init" style="width:80px" />
+        <button id="btn-add-ini">Add</button>
+        <div id="initiative-list" class="list"></div>
+      </section>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    </aside>
 
-<script src="app.js"></script>
+    <section class="center card">
+      <div class="map-toolbar">
+        <div>Session: <strong id="session-title">none</strong></div>
+        <div class="map-actions">
+          <button id="btn-place-token">Place My Token</button>
+          <button id="btn-export-session">Export JSON</button>
+          <input id="file-pfp" type="file" accept="image/*" style="display:none" />
+          <button id="btn-upload-pfp">Upload / Set Profile</button>
+        </div>
+      </div>
 
+      <div id="map-wrap" class="map-wrap">
+        <canvas id="map-canvas" width="1200" height="800"></canvas>
+        <div id="overlay-fog" class="fog-layer"></div>
+      </div>
+
+      <div class="map-footer">
+        <div id="tokens-info" class="muted">Tokens: 0</div>
+        <div id="turn-controls">
+          <button id="btn-next-turn">Next Turn</button>
+          <button id="btn-prev-turn">Prev</button>
+          <div id="current-turn" class="muted">No turn</div>
+        </div>
+      </div>
+
+    </section>
+
+    <aside class="rightcol">
+      <div class="card">
+        <h4>Chat</h4>
+        <div id="chat-log" class="chat-log"></div>
+        <input id="chat-in" placeholder="Say something..." />
+        <button id="chat-send">Send</button>
+      </div>
+
+      <div class="card">
+        <h4>Session Notes</h4>
+        <textarea id="session-notes" rows="8" placeholder="Session notes (markdown allowed)"></textarea>
+        <button id="btn-save-notes">Save Notes</button>
+      </div>
+
+      <div class="card">
+        <h4>Characters</h4>
+        <div id="characters-list" class="list"></div>
+        <button id="btn-new-character">New Local Character</button>
+      </div>
+
+      <div class="card">
+        <h4>AI (Coming Soon)</h4>
+        <p class="muted">Local/offline AI integration planned later.</p>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="footer muted">
+    Deploy: GitHub Pages. Firebase authorized domain must include your GitHub Pages domain.
+  </footer>
+
+  <script src="app.js" type="module"></script>
 </body>
 </html>
