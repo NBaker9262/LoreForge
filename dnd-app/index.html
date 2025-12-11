@@ -1,117 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LoreForge D&D App (Demo)</title>
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      GoogleAuthProvider,
-      signInWithPopup,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getDatabase,
-      ref,
-      set,
-      onValue
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-    // Your Firebase Config (SAFE TO EXPOSE)
-    const firebaseConfig = {
-      apiKey: "AIzaSyA66xqYt8GZCxRxegAo8ilq2tmqEL4mC_0",
-      authDomain: "loreforge-e5c62.firebaseapp.com",
-      projectId: "loreforge-e5c62",
-      storageBucket: "loreforge-e5c62.firebasestorage.app",
-      messagingSenderId: "529682812294",
-      appId: "1:529682812294:web:7e4b9cf64b48e813dff007",
-      measurementId: "G-E3HLEWVKJN"
-    };
-
-    // Init Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-
-    // Expose globally
-    window.firebaseAuth = auth;
-    window.firebaseDB = db;
-    window.GoogleAuthProvider = GoogleAuthProvider;
-    window.signInWithPopup = signInWithPopup;
-    window.signOut = signOut;
-    window.onAuthStateChanged = onAuthStateChanged;
-    window.refDB = ref;
-    window.setDB = set;
-    window.onValueDB = onValue;
-  </script>
+    <meta charset="UTF-8" />
+    <title>DND App Demo</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
-  <!-- HEADER -->
-  <header>
-    <h1>LoreForge D&D App</h1>
-    <div id="auth-controls">
-      <button id="login-btn">Login with Google</button>
-      <button id="logout-btn" style="display:none;">Logout</button>
+<div id="auth-section">
+    <h2>Login</h2>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <button onclick="signup()">Sign Up</button>
+</div>
+
+<div id="app" style="display:none">
+    <h1>D&D App Demo</h1>
+    <p id="role-display"></p>
+
+    <!-- Coming soon AI -->
+    <div id="ai-box">
+        <h3>AI Tools (Coming Soon)</h3>
+        <p>This app will support in-browser local AI later.</p>
     </div>
-  </header>
 
-  <!-- MAIN APP -->
-  <main id="app" style="display:none;">
+    <!-- Map Upload -->
+    <div id="map-controls">
+        <h3>Map Upload</h3>
+        <input type="file" id="mapUpload" accept="image/*" />
+    </div>
 
-    <!-- USER INFO -->
-    <section id="user-info">
-      <h2>Welcome, <span id="username"></span></h2>
-      <p>User ID: <span id="uid"></span></p>
-    </section>
+    <!-- DM Tools -->
+    <div id="dm-tools">
+        <h3>DM Tools</h3>
+        <button onclick="addToken()">Add Token</button>
+        <button onclick="removeSelectedToken()">Remove Token</button>
+        <button onclick="editSelectedToken()">Edit Token</button>
+    </div>
 
-    <!-- CHARACTER SECTION -->
-    <section>
-      <h2>Character Sheet</h2>
-      <textarea id="character-data" placeholder="Your character JSON"></textarea>
-      <button id="save-character">Save Local</button>
-      <button id="load-character">Load Local</button>
-    </section>
+    <!-- Dice Panel -->
+    <div id="dice-panel">
+        <h3>Dice Roller</h3>
+        <button onclick="rollDice(4)">d4</button>
+        <button onclick="rollDice(6)">d6</button>
+        <button onclick="rollDice(8)">d8</button>
+        <button onclick="rollDice(10)">d10</button>
+        <button onclick="rollDice(12)">d12</button>
+        <button onclick="rollDice(20)">d20</button>
+        <button onclick="rollDice(100)">d100</button>
+        <button onclick="rollAdv()">Adv</button>
+        <button onclick="rollDis()">Dis</button>
+        <div id="roll-output"></div>
+    </div>
 
-    <!-- MAP SECTION -->
-    <section>
-      <h2>Map</h2>
-      <input type="file" id="map-upload" accept="image/*" />
-      <canvas id="map-canvas" width="800" height="600"></canvas>
-    </section>
+    <!-- Map Area -->
+    <div id="map-container">
+        <img id="battlemap" src="" />
+    </div>
 
-    <!-- TOKEN SECTION -->
-    <section>
-      <h2>Token</h2>
-      <button id="add-token">Add My Token</button>
-    </section>
+</div>
 
-    <!-- DICE SECTION -->
-    <section>
-      <h2>Dice Roller</h2>
-      <button class="roll" data-sides="20">Roll d20</button>
-      <button class="roll" data-sides="6">Roll d6</button>
-      <p id="dice-output"></p>
-    </section>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
-    <!-- AI (COMING SOON) -->
-    <section>
-      <h2>AI Tools</h2>
-      <p>AI character builder coming soon…</p>
-    </section>
+<script src="app.js"></script>
 
-  </main>
-
-  <!-- JS -->
-  <script src="app.js" type="module"></script>
 </body>
 </html>
